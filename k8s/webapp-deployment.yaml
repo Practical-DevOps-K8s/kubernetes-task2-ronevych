@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: webapp
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: webapp
+  template:
+    metadata:
+      labels:
+        app: webapp
+    spec:
+      initContainers:
+      - name: wait-for-db
+        image: postgres:15
+        command: ['sh', '-c', 'until pg_isready -h postgres -p 5432; do echo waiting; sleep 2; done']
+      containers:
+      - name: webapp
+        image: ronevych/kubernetes-rails-app:latest
+        ports:
+        - containerPort: 3000
+        env:
+        - name: RAILS_ENV
+          value: production
+        - name: DB_HOST
+          value: postgres
+        - name: DB_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret
+              key: POSTGRES_USER
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret
+              key: POSTGRES_PASSWORD
+        - name: DB_NAME
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret
+              key: POSTGRES_DB
+        - name: SECRET_KEY_BASE
+          value: "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"
+        - name: RAILS_SERVE_STATIC_FILES
+          value: "true"
+        - name: RAILS_LOG_TO_STDOUT
+          value: "true"
