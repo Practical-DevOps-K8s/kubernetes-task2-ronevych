@@ -15,24 +15,12 @@ spec:
       initContainers:
       - name: wait-for-db
         image: postgres:15
-        command: ['sh', '-c', 'until pg_isready -h postgres -p 5432; do echo waiting; sleep 2; done']
+        command: ['sh', '-c', 'until pg_isready -h postgres -p 5432; do echo waiting; sleep 1; done']
       containers:
       - name: webapp
         image: ronevych/kubernetes-rails-app:latest
-        command:
-        - /bin/bash
-        - -c
-        - |
-          bin/rails db:prepare
-          bin/rails server -b 0.0.0.0
         ports:
         - containerPort: 3000
-        readinessProbe:
-          httpGet:
-            path: /
-            port: 3000
-          initialDelaySeconds: 10
-          periodSeconds: 5
         env:
         - name: RAILS_ENV
           value: production
