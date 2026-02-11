@@ -19,8 +19,20 @@ spec:
       containers:
       - name: webapp
         image: ronevych/kubernetes-rails-app:latest
+        command:
+        - /bin/bash
+        - -c
+        - |
+          bin/rails db:prepare
+          bin/rails server -b 0.0.0.0
         ports:
         - containerPort: 3000
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 3000
+          initialDelaySeconds: 10
+          periodSeconds: 5
         env:
         - name: RAILS_ENV
           value: production
